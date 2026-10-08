@@ -4,15 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { login } from "@/lib/api/user-account";
 import { useAuthStore } from "@/providers/auth-store-provider";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-
-type LoginResponse = {
-  accessToken: string;
-  tokenType: string;
-  expiresIn: number;
-};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,24 +32,15 @@ export default function LoginPage() {
     clearAccessToken();
 
     try {
-      const response = await fetch("http://localhost:8080/user-account/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        setErrorMessage(`로그인에 실패하였습니다. (${response.status})`);
-        return;
-      }
-
-      const data: LoginResponse = await response.json();
+      const data = await login({ email, password });
       setAccessToken(data.accessToken, data.expiresIn);
       form.reset();
-    } catch {
-      setErrorMessage("서버와 통신 중 에러가 발생했습니다.");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "서버 통신 중 오류가 발생했습니다.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -93,11 +79,11 @@ export default function LoginPage() {
             </div>
 
             {errorMessage && (
-              <p className="text-sm text-red-600 font-medium">{errorMessage}</p>
+              <p className="text-sm font-medium text-red-600">{errorMessage}</p>
             )}
 
             {accessToken && (
-              <p className="text-sm text-green-700 font-medium break-all">
+              <p className="break-all text-sm font-medium text-green-700">
                 로그인 성공: {accessToken}
               </p>
             )}

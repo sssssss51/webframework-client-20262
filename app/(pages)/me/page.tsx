@@ -1,5 +1,6 @@
 "use client";
 
+import { getMe } from "@/lib/api/user-account";
 import { useAuthStore } from "@/providers/auth-store-provider";
 import { MeResult } from "@/types/user";
 import Link from "next/link";
@@ -16,27 +17,10 @@ export default function MePage() {
 
     async function loadme() {
       try {
-        const response = await fetch("http://localhost:8080/user-account/me", {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            throw new Error("다시 시도해주세요");
-          }
-          if (response.status === 403) {
-            throw new Error("접근 권한이 없습니다.");
-          }
-
-          throw new Error(`내 정보 조회 실패 ${response.status}`);
-        }
-
+        const data = await getMe(accessToken as string);
         setResult({
           token: accessToken as string,
-          data: await response.json(),
+          data: data,
         });
       } catch (error) {
         setResult({
